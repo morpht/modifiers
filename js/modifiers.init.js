@@ -32,7 +32,7 @@
         $.each(modifications, function (index, modification) {
           var callback = window[modification.namespace][modification.callback];
           if (typeof callback === 'function') {
-            callback(modification.selector, modification.args);
+            callback(modification.selector, modification.media, modification.args);
           }
         });
       }
