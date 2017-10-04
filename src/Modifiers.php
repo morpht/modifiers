@@ -8,11 +8,17 @@ use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\video_embed_field\ProviderManager;
 
 /**
  * Provides utility functions for modifiers.
  */
 class Modifiers {
+
+  /**
+   * The field holding modifiers.
+   */
+  const FIELD = 'field_modifiers';
 
   /**
    * The modifier plugin manager.
@@ -22,13 +28,23 @@ class Modifiers {
   protected $modifierPluginManager;
 
   /**
+   * The video provider manager.
+   *
+   * @var \Drupal\video_embed_field\ProviderManager
+   */
+  protected $providerManager;
+
+  /**
    * Constructs a new Modifiers service.
    *
    * @param \Drupal\modifiers\ModifierPluginManager $modifier_plugin_manager
    *   The modifier plugin manager service.
+   * @param \Drupal\video_embed_field\ProviderManager $provider_manager
+   *   The video provider plugin manager.
    */
-  public function __construct(ModifierPluginManager $modifier_plugin_manager) {
+  public function __construct(ModifierPluginManager $modifier_plugin_manager, ProviderManager $provider_manager = NULL) {
     $this->modifierPluginManager = $modifier_plugin_manager;
+    $this->providerManager = $provider_manager;
   }
 
   /**
@@ -60,7 +76,7 @@ class Modifiers {
 
       // Render CSS into single string and append to existing.
       if (!empty($css)) {
-        $style .= self::renderCss($css);
+        $style .= $this->renderCss($css);
       }
 
       // Attach all required libraries.
@@ -170,7 +186,7 @@ class Modifiers {
     }
     // Get field definition and short name.
     $field = $entity->get($field_name);
-    $field_short = self::getShortField($field_name);
+    $field_short = $this->getShortField($field_name);
 
     // Process simple value fields other than references.
     if (!($field instanceof EntityReferenceFieldItemListInterface)) {
@@ -180,7 +196,7 @@ class Modifiers {
         /** @var \Drupal\Core\Field\FieldStorageDefinitionInterface $field_storage */
         $field_storage = $field->getFieldDefinition()
           ->getFieldStorageDefinition();
-        $config[$field_short] = self::getSimpleValue($field, $field_storage);
+        $config[$field_short] = $this->getSimpleValue($field, $field_storage);
       }
       return $config;
     }
@@ -211,15 +227,15 @@ class Modifiers {
 
             // Get simple value from field with referenced entity.
             if ($referenced_entity_field instanceof EntityReferenceFieldItemListInterface) {
-              $value = self::getReferencedValue($referenced_entity_field, $referenced_entity_field_storage);
+              $value = $this->getReferencedValue($referenced_entity_field, $referenced_entity_field_storage);
             }
             else {
               // Otherwise get value from simple field.
-              $value = self::getSimpleValue($referenced_entity_field, $referenced_entity_field_storage);
+              $value = $this->getSimpleValue($referenced_entity_field, $referenced_entity_field_storage);
             }
 
             // Fill field value into referenced entity config array.
-            $referenced_entity_field_short = self::getShortField($referenced_entity_field_name);
+            $referenced_entity_field_short = $this->getShortField($referenced_entity_field_name);
             $referenced_entity_config[$referenced_entity_field_short] = $value;
           }
         }
@@ -275,7 +291,7 @@ class Modifiers {
               switch ($entity_field_storage->getType()) {
 
                 case 'color_field_type':
-                  $values[] = self::getColorValue($entity_field->color, $entity_field->opacity);
+                  $values[] = $this->getColorValue($entity_field->color, $entity_field->opacity);
                   break;
 
                 case 'image':
@@ -289,8 +305,7 @@ class Modifiers {
                 case 'video_embed_field':
                   $input = $entity_field->value;
                   /** @var \Drupal\video_embed_field\ProviderPluginBase $provider */
-                  $provider = \Drupal::service('video_embed_field.provider_manager')
-                    ->loadProviderFromInput($input);
+                  $provider = $this->providerManager->loadProviderFromInput($input);
                   $values[] = $provider->getPluginId() . ':' . $input;
                   break;
               }
@@ -329,7 +344,7 @@ class Modifiers {
 
         // Specific handling for color field.
         if ($field_type === 'color_field_type') {
-          $values[] = self::getColorValue($item['color'], $item['opacity']);
+          $values[] = $this->getColorValue($item['color'], $item['opacity']);
         }
         else {
           // Get value by main property.
