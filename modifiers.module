@@ -33,7 +33,7 @@ function modifiers_entity_view_alter(array &$build, EntityInterface $entity, Ent
   $entity_id = Html::getClass($entity_type . '-' . $entity->id());
 
   // Skip preview display mode on paragraph entities.
-  if (!empty($build['#view_mode']) && $build['#view_mode'] === 'preview' && $entity_type === 'paragraph') {
+  if ($entity_type === 'paragraph' && !empty($build['#view_mode']) && $build['#view_mode'] === 'preview') {
     return;
   }
 
