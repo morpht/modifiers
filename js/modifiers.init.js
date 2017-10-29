@@ -20,7 +20,7 @@
 
     init: function () {
       // Skip processing if there are no modifications.
-      if (drupalSettings.modifications !== undefined) {
+      if (typeof drupalSettings.modifications !== 'undefined') {
         var modifications = [];
 
         // Group all modifications into single array.
@@ -37,6 +37,6 @@
         });
       }
     }
-  }
+  };
 
 })(jQuery, Drupal, drupalSettings);
