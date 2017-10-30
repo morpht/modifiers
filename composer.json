@@ -1,0 +1,15 @@
+{
+  "name": "drupal/modifiers",
+  "description": "Integrates Modifier plugins into the page and into entities.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/modifiers",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/modifiers",
+    "source": "https://github.com/morpht/modifiers"
+  },
+  "suggest": {
+    "drupal/modifiers_pack": "Provides a set of basic Modifier plugins.",
+    "drupal/look": "Provides Look entity management for usage with Modifiers."
+  }
+}
