@@ -71,6 +71,6 @@ function modifiers_entity_view_alter(array &$build, EntityInterface $entity, Ent
   $modifiers->process($modifications, $config['modifiers'], $selector);
 
   if (!empty($modifications)) {
-    $modifiers->apply($modifications, $build, '#attributes', $entity_id);
+    $modifiers->apply($modifications, $build, $entity_id);
   }
 }

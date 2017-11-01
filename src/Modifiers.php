@@ -54,15 +54,15 @@ class Modifiers {
    *   The modification objects to be applied.
    * @param array $build
    *   The element where modification is attached.
-   * @param string $attributes_key
-   *   The array key inside $build where attributes are attached.
    * @param string $build_id
    *   The specific ID unique within the current request.
    */
-  public function apply(array $modifications, array &$build, $attributes_key, $build_id) {
+  public function apply(array $modifications, array &$build, $build_id) {
 
     // Initialize empty CSS string.
     $style = '';
+    // Initialize empty attributes array.
+    $build_attributes = [];
 
     // Process all modifications.
     foreach ($modifications as $modification) {
@@ -86,19 +86,12 @@ class Modifiers {
 
       // Attach settings for JS libraries.
       if (!empty($settings)) {
-        $build['#attached']['drupalSettings']['modifications'][$build_id][] = $settings;
+        $build['#attached']['drupalSettings']['modifiers']['settings'][$build_id][] = $settings;
       }
 
-      // Set all provided attributes to target object.
-      foreach ($attributes as $attribute_key => $attribute) {
-        if (is_array($attribute)) {
-          foreach ($attribute as $attribute_item) {
-            $build[$attributes_key][$attribute_key][] = $attribute_item;
-          }
-        }
-        else {
-          $build[$attributes_key][$attribute_key] = $attribute;
-        }
+      // Attach attributes for JS processing.
+      if (!empty($attributes)) {
+        $this->mergeAttributes($build_attributes, $attributes);
       }
 
       // Attach all links between head elements.
@@ -131,6 +124,11 @@ class Modifiers {
         'modifications_css_' . $build_id,
       ];
     }
+
+    // Attach attributes from all current modifications together.
+    if (!empty($build_attributes)) {
+      $build['#attached']['drupalSettings']['modifiers']['attributes'][$build_id] = $build_attributes;
+    }
   }
 
   /**
@@ -160,6 +158,41 @@ class Modifiers {
       }
     }
     return $css;
+  }
+
+  /**
+   * Merges provided attributes into existing array.
+   *
+   * @param array $build_attributes
+   *   The existing attributes for merging.
+   * @param array $attributes
+   *   The attributes to be merged.
+   */
+  private function mergeAttributes(array &$build_attributes, array $attributes) {
+
+    // Process all attributes by media queries and selectors.
+    foreach ($attributes as $media => $selectors) {
+      foreach ($selectors as $selector => $attributes_set) {
+        foreach ($attributes_set as $attribute_key => $attribute) {
+          // Initialize current target attribute.
+          $target = &$build_attributes[$media][$selector][$attribute_key];
+          // Only when attribute is set of values.
+          if (is_array($attribute)) {
+            // Merge when target attribute is already set.
+            $target = is_array($target) ? array_merge($target, $attribute) : $attribute;
+            // Filter only unique values.
+            $target = array_unique($target);
+          }
+          // Other attributes have single value.
+          else {
+            // Only when attribute is not already set.
+            if (empty($target)) {
+              $target = $attribute;
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
