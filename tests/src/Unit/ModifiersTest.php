@@ -54,8 +54,13 @@ class ModifiersTest extends UnitTestCase {
     ], [
       'setting1' => 'value1',
     ], [
-      'class' => [
-        'modifiers-class1',
+      'all' => [
+        '.selector' => [
+          'class' => [
+            'modifiers-class1',
+          ],
+          'attribute1' => 'value1',
+        ],
       ],
     ], [
       [
@@ -73,8 +78,13 @@ class ModifiersTest extends UnitTestCase {
     ], [
       'setting2' => 'value2',
     ], [
-      'class' => [
-        'modifiers-class2',
+      'all' => [
+        '.selector' => [
+          'class' => [
+            'modifiers-class2',
+          ],
+          'attribute2' => 'value2',
+        ],
       ],
     ], [
       [
@@ -83,7 +93,7 @@ class ModifiersTest extends UnitTestCase {
     ]);
     $modifications = [$modification_1, $modification_2];
     $actual_1 = [];
-    $this->modifiers->apply($modifications, $actual_1, '#attributes', 'test');
+    $this->modifiers->apply($modifications, $actual_1, 'test');
     $expected_1 = [
       '#attached' => [
         'library' => [
@@ -91,13 +101,29 @@ class ModifiersTest extends UnitTestCase {
           'module2/library2',
         ],
         'drupalSettings' => [
-          'modifications' => [
-            'test' => [
-              [
-                'setting1' => 'value1',
+          'modifiers' => [
+            'settings' => [
+              'test' => [
+                [
+                  'setting1' => 'value1',
+                ],
+                [
+                  'setting2' => 'value2',
+                ],
               ],
-              [
-                'setting2' => 'value2',
+            ],
+            'attributes' => [
+              'test' => [
+                'all' => [
+                  '.selector' => [
+                    'class' => [
+                      'modifiers-class1',
+                      'modifiers-class2',
+                    ],
+                    'attribute1' => 'value1',
+                    'attribute2' => 'value2',
+                  ],
+                ],
               ],
             ],
           ],
@@ -138,12 +164,6 @@ class ModifiersTest extends UnitTestCase {
             ],
             'modifications_css_test',
           ],
-        ],
-      ],
-      '#attributes' => [
-        'class' => [
-          'modifiers-class1',
-          'modifiers-class2',
         ],
       ],
     ];
