@@ -14,8 +14,8 @@
       // Process only once.
       if (this.processed === false) {
         this.processed = true;
-        this.initSettings();
         this.initAttributes();
+        this.initSettings();
       }
     },
 
