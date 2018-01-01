@@ -14,8 +14,12 @@
       // Process only once.
       if (this.processed === false) {
         this.processed = true;
-        this.initAttributes();
-        this.initSettings();
+
+        // Process only if there are some modifiers.
+        if (typeof drupalSettings.modifiers !== 'undefined') {
+          this.initAttributes();
+          this.initSettings();
+        }
       }
     },
 
