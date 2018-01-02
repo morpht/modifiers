@@ -4,6 +4,7 @@ namespace Drupal\modifiers;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -19,6 +20,13 @@ class Modifiers {
    * The field holding modifiers.
    */
   const FIELD = 'field_modifiers';
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
 
   /**
    * The modifier plugin manager.
@@ -37,12 +45,15 @@ class Modifiers {
   /**
    * Constructs a new Modifiers service.
    *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    * @param \Drupal\modifiers\ModifierPluginManager $modifier_plugin_manager
    *   The modifier plugin manager service.
    * @param \Drupal\video_embed_field\ProviderManager $provider_manager
    *   The video provider plugin manager.
    */
-  public function __construct(ModifierPluginManager $modifier_plugin_manager, ProviderManager $provider_manager = NULL) {
+  public function __construct(ModuleHandlerInterface $module_handler, ModifierPluginManager $modifier_plugin_manager, ProviderManager $provider_manager = NULL) {
+    $this->moduleHandler = $module_handler;
     $this->modifierPluginManager = $modifier_plugin_manager;
     $this->providerManager = $provider_manager;
   }
@@ -294,24 +305,38 @@ class Modifiers {
 
     // Only if some value exists.
     if (!$field->isEmpty()) {
-      // Define mappings from entity type/bundle to field name.
+      // Define mappings from entity type and bundle to field names.
       $mappings = [
-        'taxonomy_term/modifiers_color' => 'field_mod_color',
-        'media/image' => 'image',
-        'media/video' => 'field_media_video_embed_field',
+        'media' => [
+          'image' => ['image', 'field_file'],
+          'video' => ['field_media_video_embed_field', 'field_file'],
+        ],
+        'taxonomy_term' => [
+          'modifiers_color' => ['field_mod_color'],
+        ],
       ];
-      $values = [];
+      // Allow other modules to alter these mappings.
+      $this->moduleHandler->alter('modifiers_mappings', $mappings);
 
+      $values = [];
       // Process all referenced entities.
       foreach ($field->referencedEntities() as $entity) {
-        $type = $entity->getEntityTypeId() . '/' . $entity->bundle();
+        $type = $entity->getEntityTypeId();
+        $bundle = $entity->bundle();
 
-        // Only if entity type and bundle is not already processed.
-        if ($entity instanceof FieldableEntityInterface && !empty($mappings[$type])) {
-          $entity_field_name = $mappings[$type];
+        // Only if this type has some mappings.
+        if ($entity instanceof FieldableEntityInterface && isset($mappings[$type][$bundle])) {
+
+          // Find first existing field by name.
+          foreach ($mappings[$type][$bundle] as $field_name) {
+            if ($entity->hasField($field_name)) {
+              $entity_field_name = $field_name;
+              break;
+            }
+          }
 
           // Only for entities with mapped field.
-          if ($entity->hasField($entity_field_name)) {
+          if (!empty($entity_field_name)) {
             /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $entity_field */
             $entity_field = $entity->get($entity_field_name);
 
@@ -341,13 +366,20 @@ class Modifiers {
                   $provider = $this->providerManager->loadProviderFromInput($input);
                   $values[] = $provider->getPluginId() . ':' . $input;
                   break;
+
+                default:
+                  $property_name = $field_storage->getMainPropertyName();
+                  $values[] = $entity_field->{$property_name};
+                  break;
               }
             }
           }
         }
       }
       // Return simple value or array of values.
-      return $field_storage->isMultiple() ? $values : $values[0];
+      if (!empty($values)) {
+        return $field_storage->isMultiple() ? $values : $values[0];
+      }
     }
     // Return null if there is no value.
     return NULL;

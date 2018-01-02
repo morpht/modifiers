@@ -31,5 +31,36 @@ function hook_modifiers_info_alter(array &$modifiers) {
 }
 
 /**
+ * Alter the referenced value mappings.
+ *
+ * Modules may implement this hook to alter the default mappings of entity
+ * types and bundles to corresponding fields.
+ *
+ * Default mappings:
+ * @code
+ * $mappings = [
+ *   'media' => [
+ *     'image' => ['image', 'field_file'],
+ *     'video' => ['field_media_video_embed_field', 'field_file'],
+ *   ],
+ *   'taxonomy_term' => [
+ *     'modifiers_color' => ['field_mod_color'],
+ *   ],
+ * ];
+ * @endcode
+ *
+ * @param array $mappings
+ *   The mappings to be altered, keyed by entity type and bundle.
+ *
+ * @see getReferencedValue()
+ */
+function hook_modifiers_mappings_alter(array &$mappings) {
+  if (!empty($mappings['taxonomy_term']['modifiers_color'])) {
+    unset($mappings['taxonomy_term']['modifiers_color']);
+    $mappings['taxonomy_term']['my_color_bundle'] = ['field_color'];
+  }
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

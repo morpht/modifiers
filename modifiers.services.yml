@@ -1,7 +1,7 @@
 services:
   modifiers:
     class: \Drupal\modifiers\Modifiers
-    arguments: ['@plugin.manager.modifier', '@?video_embed_field.provider_manager']
+    arguments: ['@module_handler', '@plugin.manager.modifier', '@?video_embed_field.provider_manager']
 
   plugin.manager.modifier:
     class: \Drupal\modifiers\ModifierPluginManager
