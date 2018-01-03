@@ -19,12 +19,12 @@
  * of the "class" and "provider" keys.
  *
  * @param array $modifiers
- *   The modifier information to be altered, keyed by modifier IDs.
+ *   The modifier information to be altered, keyed by modifier ID.
  *
- * @see \Drupal\modifiers\ModifierPluginBase
+ * @see \Drupal\modifiers\Annotation\Modifier
  */
 function hook_modifiers_info_alter(array &$modifiers) {
-  if (!empty($modifiers['example_modifier'])) {
+  if (isset($modifiers['example_modifier'])) {
     $modifiers['example_modifier']['class'] = '\Drupal\my_module\MuchBetterModifier';
     $modifiers['example_modifier']['label'] = t('Much Better Modifier');
   }
@@ -37,6 +37,7 @@ function hook_modifiers_info_alter(array &$modifiers) {
  * types and bundles to corresponding fields.
  *
  * Default mappings:
+ *
  * @code
  * $mappings = [
  *   'media' => [
@@ -52,12 +53,39 @@ function hook_modifiers_info_alter(array &$modifiers) {
  * @param array $mappings
  *   The mappings to be altered, keyed by entity type and bundle.
  *
- * @see getReferencedValue()
+ * @see \Drupal\modifiers\Modifiers::getReferencedValue()
  */
 function hook_modifiers_mappings_alter(array &$mappings) {
-  if (!empty($mappings['taxonomy_term']['modifiers_color'])) {
+  if (isset($mappings['taxonomy_term']['modifiers_color'])) {
     unset($mappings['taxonomy_term']['modifiers_color']);
     $mappings['taxonomy_term']['my_color_bundle'] = ['field_color'];
+  }
+}
+
+/**
+ * Alter the extracted configuration.
+ *
+ * Modules may implement this hook to alter the configuration that is
+ * extracted from entity inside hook_entity_view_alter().
+ * It is also possible to alter the build array (e.g. extra classes).
+ *
+ * @param array $config
+ *   The configuration array to be altered, keyed by modifier ID.
+ * @param array &$context
+ *   Various aspects of the context in which the entity is going to be
+ *   displayed, with the following keys:
+ *   - 'build': The alterable build array for rendering.
+ *   - 'entity': The entity being viewed.
+ *   - 'display': The entity view display object.
+ *
+ * @see modifiers_entity_view_alter()
+ */
+function hook_modifiers_entity_view_config_alter(array &$config, array &$context) {
+  if (isset($config['my_modifier'])) {
+    foreach ($config['my_modifier'] as &$modifier_config) {
+      $modifier_config['entity_type'] = $context['entity']->getEntityTypeId();
+      $modifier_config['display_mode'] = $context['display']->getMode();
+    }
   }
 }
 

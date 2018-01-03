@@ -31,9 +31,10 @@ function modifiers_entity_view_alter(array &$build, EntityInterface $entity, Ent
 
   $entity_type = $entity->getEntityTypeId();
   $entity_id = Html::getClass($entity_type . '-' . $entity->id());
+  $display_mode = $display->getMode();
 
   // Skip preview display mode on paragraph entities.
-  if ($entity_type === 'paragraph' && !empty($build['#view_mode']) && $build['#view_mode'] === 'preview') {
+  if ($entity_type === 'paragraph' && $display_mode === 'preview') {
     return;
   }
 
@@ -45,22 +46,29 @@ function modifiers_entity_view_alter(array &$build, EntityInterface $entity, Ent
   $build['#attributes']['class'][] = Html::getClass('modifiers-type-' . $entity_type);
   // Add entity bundle class.
   $build['#attributes']['class'][] = Html::getClass('modifiers-bundle-' . $entity->bundle());
-  // Add entity view mode class.
-  if (!empty($build['#view_mode'])) {
-    $build['#attributes']['class'][] = Html::getClass('modifiers-display-' . $build['#view_mode']);
-  }
+  // Add entity display mode class.
+  $build['#attributes']['class'][] = Html::getClass('modifiers-display-' . $display_mode);
 
   // Initialize modifiers service.
   /** @var \Drupal\modifiers\Modifiers $modifiers */
   $modifiers = \Drupal::service('modifiers');
 
-  $config = $modifiers->extractEntityConfig($entity, Modifiers::FIELD);
+  $config = $modifiers->extractEntityConfig($entity, Modifiers::FIELD, ['modifiers' => []]);
 
-  if (empty($config)) {
+  // Allow other modules to alter extracted config.
+  $context = [
+    'build' => $build,
+    'entity' => $entity,
+    'display' => $display,
+  ];
+  \Drupal::moduleHandler()
+    ->alter('modifiers_entity_view_config', $config['modifiers'], $context);
+
+  if (empty($config['modifiers'])) {
     return;
   }
 
-  $build['#modifiers'][] = $config;
+  $build['#modifiers'][] = $config['modifiers'];
 
   // Selector needs to be very specific.
   $selector = 'html body .modifiers.modifiers-id-' . $entity_id;
