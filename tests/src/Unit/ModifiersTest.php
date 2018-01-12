@@ -20,6 +20,13 @@ class ModifiersTest extends UnitTestCase {
   protected $modifiers;
 
   /**
+   * The mocked module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $moduleHandler;
+
+  /**
    * The mocked modifier plugin manager.
    *
    * @var \Drupal\modifiers\ModifierPluginManager|\PHPUnit_Framework_MockObject_MockObject
@@ -32,10 +39,11 @@ class ModifiersTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
+    $this->moduleHandler = $this->getMock('\Drupal\Core\Extension\ModuleHandlerInterface');
     $this->modifierPluginManager = $this->getMockBuilder('Drupal\modifiers\ModifierPluginManager')
       ->disableOriginalConstructor()
       ->getMock();
-    $this->modifiers = new Modifiers($this->modifierPluginManager);
+    $this->modifiers = new Modifiers($this->moduleHandler, $this->modifierPluginManager);
   }
 
   /**
