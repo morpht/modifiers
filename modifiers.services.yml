@@ -6,3 +6,4 @@ services:
   plugin.manager.modifier:
     class: \Drupal\modifiers\ModifierPluginManager
     parent: default_plugin_manager
+    arguments: ['@theme_handler']
