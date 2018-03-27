@@ -39,7 +39,7 @@ class ModifiersTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->moduleHandler = $this->getMock('\Drupal\Core\Extension\ModuleHandlerInterface');
+    $this->moduleHandler = $this->createMock('\Drupal\Core\Extension\ModuleHandlerInterface');
     $this->modifierPluginManager = $this->getMockBuilder('Drupal\modifiers\ModifierPluginManager')
       ->disableOriginalConstructor()
       ->getMock();
