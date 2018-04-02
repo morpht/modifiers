@@ -43,6 +43,7 @@ function hook_modifiers_info_alter(array &$modifiers) {
  *   'media' => [
  *     'image' => ['field_media_image', 'image', 'field_file'],
  *     'video' => ['field_media_video_embed_field', 'field_file'],
+ *     'video_embed' => ['field_media_video_embed_field', 'field_file'],
  *   ],
  *   'taxonomy_term' => [
  *     'modifiers_color' => ['field_mod_color'],
