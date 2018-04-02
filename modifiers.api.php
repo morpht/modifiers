@@ -41,7 +41,7 @@ function hook_modifiers_info_alter(array &$modifiers) {
  * @code
  * $mappings = [
  *   'media' => [
- *     'image' => ['image', 'field_file'],
+ *     'image' => ['field_media_image', 'image', 'field_file'],
  *     'video' => ['field_media_video_embed_field', 'field_file'],
  *   ],
  *   'taxonomy_term' => [

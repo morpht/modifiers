@@ -308,7 +308,7 @@ class Modifiers {
       // Define mappings from entity type and bundle to field names.
       $mappings = [
         'media' => [
-          'image' => ['image', 'field_file'],
+          'image' => ['field_media_image', 'image', 'field_file'],
           'video' => ['field_media_video_embed_field', 'field_file'],
         ],
         'taxonomy_term' => [
