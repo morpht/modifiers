@@ -369,7 +369,7 @@ class Modifiers {
                   break;
 
                 default:
-                  $property_name = $field_storage->getMainPropertyName();
+                  $property_name = $entity_field_storage->getMainPropertyName();
                   $values[] = $entity_field->{$property_name};
                   break;
               }
