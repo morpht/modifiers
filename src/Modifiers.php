@@ -331,48 +331,46 @@ class Modifiers {
           // Find first existing field by name.
           foreach ($mappings[$type][$bundle] as $field_name) {
             if ($entity->hasField($field_name)) {
-              $entity_field_name = $field_name;
-              break;
+              // Only if some value exists.
+              if (!$entity->get($field_name)->isEmpty()) {
+                /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $entity_field */
+                $entity_field = $entity->get($field_name);
+                break;
+              }
             }
           }
 
           // Only for entities with mapped field.
-          if (!empty($entity_field_name)) {
-            /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $entity_field */
-            $entity_field = $entity->get($entity_field_name);
+          if (!empty($entity_field)) {
+            $entity_field_storage = $entity_field->getFieldDefinition()
+              ->getFieldStorageDefinition();
 
-            // Only if some value exists.
-            if (!$entity_field->isEmpty()) {
-              $entity_field_storage = $entity_field->getFieldDefinition()
-                ->getFieldStorageDefinition();
+            // Get value by different field types.
+            switch ($entity_field_storage->getType()) {
 
-              // Get value by different field types.
-              switch ($entity_field_storage->getType()) {
+              case 'color_field_type':
+                $values[] = $this->getColorValue($entity_field->color, $entity_field->opacity);
+                break;
 
-                case 'color_field_type':
-                  $values[] = $this->getColorValue($entity_field->color, $entity_field->opacity);
-                  break;
+              case 'image':
+                /** @var \Drupal\file\Entity\File $file */
+                foreach ($entity_field->referencedEntities() as $file) {
+                  // Get image URL.
+                  $values[] = $file->url();
+                }
+                break;
 
-                case 'image':
-                  /** @var \Drupal\file\Entity\File $file */
-                  foreach ($entity_field->referencedEntities() as $file) {
-                    // Get image URL.
-                    $values[] = $file->url();
-                  }
-                  break;
+              case 'video_embed_field':
+                $input = $entity_field->value;
+                /** @var \Drupal\video_embed_field\ProviderPluginBase $provider */
+                $provider = $this->providerManager->loadProviderFromInput($input);
+                $values[] = $provider->getPluginId() . ':' . $input;
+                break;
 
-                case 'video_embed_field':
-                  $input = $entity_field->value;
-                  /** @var \Drupal\video_embed_field\ProviderPluginBase $provider */
-                  $provider = $this->providerManager->loadProviderFromInput($input);
-                  $values[] = $provider->getPluginId() . ':' . $input;
-                  break;
-
-                default:
-                  $property_name = $entity_field_storage->getMainPropertyName();
-                  $values[] = $entity_field->{$property_name};
-                  break;
-              }
+              default:
+                $property_name = $entity_field_storage->getMainPropertyName();
+                $values[] = $entity_field->{$property_name};
+                break;
             }
           }
         }

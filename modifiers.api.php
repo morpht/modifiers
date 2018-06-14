@@ -34,7 +34,7 @@ function hook_modifiers_info_alter(array &$modifiers) {
  * Alter the referenced value mappings.
  *
  * Modules may implement this hook to alter the default mappings of entity
- * types and bundles to corresponding fields.
+ * types and bundles to corresponding fields. First non-empty field is used.
  *
  * Default mappings:
  *
