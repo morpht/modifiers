@@ -3,33 +3,27 @@
  * Initializes all modifications.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function ($, Drupal) {
 
   'use strict';
 
   Drupal.behaviors.modifiers = {
-    processed: false,
 
-    attach: function () {
-      // Process only once.
-      if (this.processed === false) {
-        this.processed = true;
-
-        // Process only if there are some modifiers.
-        if (typeof drupalSettings.modifiers !== 'undefined') {
-          this.initAttributes();
-          this.initSettings();
-        }
+    attach: function attach(context, settings) {
+      // Process only if there are some modifiers.
+      if (typeof settings.modifiers !== 'undefined') {
+        this.initAttributes(context, settings);
+        this.initSettings(context, settings);
       }
     },
 
-    initSettings: function () {
+    initSettings: function (context, settings) {
       // Skip processing if there are no modifications.
-      if (typeof drupalSettings.modifiers.settings !== 'undefined') {
+      if (typeof settings.modifiers.settings !== 'undefined') {
         var modifications = [];
 
         // Group all modifications into single array.
-        $.each(drupalSettings.modifiers.settings, function (index, group) {
+        $.each(settings.modifiers.settings, function (index, group) {
           modifications = modifications.concat(group);
         });
 
@@ -37,19 +31,26 @@
         $.each(modifications, function (index, modification) {
           var callback = window[modification.namespace][modification.callback];
           if (typeof callback === 'function') {
-            callback(modification.selector, modification.media, modification.args);
+            // Check number of callback arguments.
+            if (callback.length > 3) {
+              callback(context, modification.selector, modification.media, modification.args);
+            }
+            else {
+              // Callback without context for backward compatibility.
+              callback(modification.selector, modification.media, modification.args);
+            }
           }
         });
       }
     },
 
-    initAttributes: function () {
+    initAttributes: function (context, settings) {
       // Skip processing if there are no attributes.
-      if (typeof drupalSettings.modifiers.attributes !== 'undefined') {
+      if (typeof settings.modifiers.attributes !== 'undefined') {
         var attributes = {};
 
         // Group all attributes into single array.
-        $.each(drupalSettings.modifiers.attributes, function (index, group) {
+        $.each(settings.modifiers.attributes, function (index, group) {
           $.each(group, function (media, selectors) {
             // Initialize array for this media.
             if (typeof attributes[media] === 'undefined') {
@@ -62,17 +63,17 @@
         });
 
         // Process all attributes immediately.
-        this.toggleAttributes(attributes);
+        this.toggleAttributes(context, attributes);
 
         var that = this;
         // Process all attributes again after resize.
         window.addEventListener('resize', function () {
-          that.toggleAttributes(attributes);
+          that.toggleAttributes(context, attributes);
         });
       }
     },
 
-    toggleAttributes: function (attributes) {
+    toggleAttributes: function (context, attributes) {
       var enable = {};
       var disable = {};
 
@@ -94,7 +95,7 @@
 
       // Remove unwanted attributes from target objects.
       $.each(disable, function (selector, values) {
-        var element = $(selector);
+        var element = $(selector, context);
         if (element.length) {
           // Process all attributes.
           $.each(values, function (attribute, value) {
@@ -112,7 +113,7 @@
 
       // Set required attributes to target objects.
       $.each(enable, function (selector, values) {
-        var element = $(selector);
+        var element = $(selector, context);
         if (element.length) {
           // Process all attributes.
           $.each(values, function (attribute, value) {
@@ -133,4 +134,4 @@
     }
   };
 
-})(jQuery, Drupal, drupalSettings);
+})(jQuery, Drupal);
