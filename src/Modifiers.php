@@ -359,10 +359,10 @@ class Modifiers {
                 $values[] = $this->getColorValue($entity_field->color, $entity_field->opacity);
                 break;
 
+              case 'file':
               case 'image':
                 /** @var \Drupal\file\Entity\File $file */
                 foreach ($entity_field->referencedEntities() as $file) {
-                  // Get image URL.
                   $values[] = $file->url();
                 }
                 break;
