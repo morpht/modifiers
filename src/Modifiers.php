@@ -9,7 +9,6 @@ use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\video_embed_field\ProviderManager;
 
 /**
  * Provides utility functions for modifiers.
@@ -36,26 +35,16 @@ class Modifiers {
   protected $modifierPluginManager;
 
   /**
-   * The video provider manager.
-   *
-   * @var \Drupal\video_embed_field\ProviderManager
-   */
-  protected $providerManager;
-
-  /**
    * Constructs a new Modifiers service.
    *
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param \Drupal\modifiers\ModifierPluginManager $modifier_plugin_manager
    *   The modifier plugin manager service.
-   * @param \Drupal\video_embed_field\ProviderManager $provider_manager
-   *   The video provider plugin manager.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, ModifierPluginManager $modifier_plugin_manager, ProviderManager $provider_manager = NULL) {
+  public function __construct(ModuleHandlerInterface $module_handler, ModifierPluginManager $modifier_plugin_manager) {
     $this->moduleHandler = $module_handler;
     $this->modifierPluginManager = $modifier_plugin_manager;
-    $this->providerManager = $provider_manager;
   }
 
   /**
@@ -365,13 +354,6 @@ class Modifiers {
                 foreach ($entity_field->referencedEntities() as $file) {
                   $values[] = $file->url();
                 }
-                break;
-
-              case 'video_embed_field':
-                $input = $entity_field->value;
-                /** @var \Drupal\video_embed_field\ProviderPluginBase $provider */
-                $provider = $this->providerManager->loadProviderFromInput($input);
-                $values[] = $provider->getPluginId() . ':' . $input;
                 break;
 
               default:
