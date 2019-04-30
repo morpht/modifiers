@@ -345,7 +345,9 @@ class Modifiers {
             switch ($entity_field_storage->getType()) {
 
               case 'color_field_type':
-                $values[] = $this->getColorValue($entity_field->color, $entity_field->opacity);
+                foreach ($entity_field->getValue() as $item) {
+                  $values[] = $this->getColorValue($item['color'], $item['opacity']);
+                }
                 break;
 
               case 'file':
@@ -357,8 +359,9 @@ class Modifiers {
                 break;
 
               default:
-                $property_name = $entity_field_storage->getMainPropertyName();
-                $values[] = $entity_field->{$property_name};
+                foreach ($entity_field->getValue() as $item) {
+                  $values[] = $item[$entity_field_storage->getMainPropertyName()];
+                }
                 break;
             }
           }
