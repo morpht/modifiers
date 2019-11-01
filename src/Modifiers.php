@@ -354,7 +354,7 @@ class Modifiers {
               case 'image':
                 /** @var \Drupal\file\Entity\File $file */
                 foreach ($entity_field->referencedEntities() as $file) {
-                  $values[] = $file->url();
+                  $values[] = $file->createFileUrl();
                 }
                 break;
 
