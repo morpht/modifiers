@@ -290,7 +290,7 @@ class Modifiers {
    * @return array|mixed|null
    *   The array of values, single value or null if empty.
    */
-  private function getReferencedValue(EntityReferenceFieldItemListInterface $field, FieldStorageDefinitionInterface $field_storage) {
+  public function getReferencedValue(EntityReferenceFieldItemListInterface $field, FieldStorageDefinitionInterface $field_storage) {
 
     // Only if some value exists.
     if (!$field->isEmpty()) {
@@ -387,7 +387,7 @@ class Modifiers {
    * @return array|mixed|null
    *   The array of values, single value or null if empty.
    */
-  private function getSimpleValue(FieldItemListInterface $field, FieldStorageDefinitionInterface $field_storage) {
+  public function getSimpleValue(FieldItemListInterface $field, FieldStorageDefinitionInterface $field_storage) {
 
     // Only if some value exists.
     if (!$field->isEmpty()) {
@@ -425,7 +425,7 @@ class Modifiers {
    * @return string
    *   The RGBA value.
    */
-  private function getColorValue($color, $opacity) {
+  public function getColorValue($color, $opacity) {
 
     // Clean provided values.
     $hex = trim($color);
@@ -442,7 +442,7 @@ class Modifiers {
       return '';
     }
     // Convert hexadecimal string to decimal.
-    list($red, $green, $blue) = sscanf($hex, "%02x%02x%02x");
+    [$red, $green, $blue] = sscanf($hex, "%02x%02x%02x");
 
     // Join provided values into single RGBA string.
     return 'rgba(' . $red . ',' . $green . ',' . $blue . ',' . $opacity . ')';
