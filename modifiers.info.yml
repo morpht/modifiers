@@ -2,4 +2,5 @@ name: Modifiers
 type: module
 description: Integrates Modifier plugins into the page and into entities.
 core: 8.x
+core_version_requirement: ^8 || ^9
 package: Modifiers
