@@ -33,11 +33,16 @@
           if (typeof callback === 'function') {
             // Check number of callback arguments.
             if (callback.length > 3) {
+              // Callback with context and selector for backward compatibility.
               callback(context, modification.selector, modification.media, modification.args);
             }
             else {
-              // Callback without context for backward compatibility.
-              callback(modification.selector, modification.media, modification.args);
+              // Limit elements by context.
+              $(modification.selector).each(function () {
+                if ($.contains(context, this)) {
+                  callback(this, modification.media, modification.args);
+                }
+              });
             }
           }
         });
@@ -95,17 +100,20 @@
 
       // Remove unwanted attributes from target objects.
       $.each(disable, function (selector, values) {
-        var element = $(selector, context);
-        if (element.length) {
+        // Limit elements by context.
+        var elements = $(selector).filter(function () {
+          return $.contains(context, this);
+        });
+        if (elements.length) {
           // Process all attributes.
           $.each(values, function (attribute, value) {
             if (attribute === 'class') {
               $.each(value, function (index, item) {
-                element.removeClass(item);
+                elements.removeClass(item);
               });
             }
             else {
-              element.prop(attribute, null);
+              elements.prop(attribute, null);
             }
           });
         }
@@ -113,20 +121,23 @@
 
       // Set required attributes to target objects.
       $.each(enable, function (selector, values) {
-        var element = $(selector, context);
-        if (element.length) {
+        // Limit elements by context.
+        var elements = $(selector).filter(function () {
+          return $.contains(context, this);
+        });
+        if (elements.length) {
           // Process all attributes.
           $.each(values, function (attribute, value) {
             if (attribute === 'class') {
               $.each(value, function (index, item) {
-                element.addClass(item);
+                elements.addClass(item);
               });
             }
             else if (typeof value === 'object') {
-              element.prop(attribute, value.join(' '));
+              elements.prop(attribute, value.join(' '));
             }
             else {
-              element.prop(attribute, value);
+              elements.prop(attribute, value);
             }
           });
         }
