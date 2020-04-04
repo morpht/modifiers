@@ -9,6 +9,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Render\Element;
 use Drupal\modifiers\Modifiers;
 
 /**
@@ -79,6 +80,118 @@ function modifiers_entity_view_alter(array &$build, EntityInterface $entity, Ent
   $modifiers->process($modifications, $config['modifiers'], $selector);
 
   if (!empty($modifications)) {
+    $modifiers->apply($modifications, $build, $entity_id);
+  }
+}
+
+/**
+ * Implements template_preprocess_layout().
+ */
+function modifiers_preprocess_layout(&$variables) {
+  $blocks = [];
+
+  // Find all modifier blocks between regions.
+  foreach (Element::children($variables['content']) as $region_key) {
+    $block_keys = Element::children($variables['content'][$region_key]);
+
+    // Search between all blocks inside specific region.
+    foreach ($block_keys as $block_key) {
+      $region_block = $variables['content'][$region_key][$block_key];
+
+      // Only if block contains a custom block entity.
+      if (isset($region_block['content']['#block_content'])) {
+        /** @var \Drupal\block_content\Entity\BlockContent $entity */
+        $entity = $region_block['content']['#block_content'];
+
+        // Check if this block is of a modifier block type.
+        if (substr($entity->bundle(), -9) === '_modifier') {
+          // Apply to section if checkbox is checked.
+          if ($entity->hasField('field_lb_modifiers_section')
+            && !empty($entity->get('field_lb_modifiers_section')->value)
+          ) {
+            $blocks['section'][] = $entity;
+          }
+          else {
+            // Apply this modifier to region.
+            $blocks['region'][$region_key][] = $entity;
+          }
+        }
+      }
+    }
+  }
+
+  // Process all modifiers if found.
+  if (!empty($blocks)) {
+    // Get unique ID for every section with modifiers.
+    $section_id = &drupal_static(__FUNCTION__, 0);
+    $section_id++;
+
+    // Process all section modifiers if available.
+    if (!empty($blocks['section'])) {
+      $entity_id = 'section-' . $section_id;
+      _modifiers_layout_apply($variables, $blocks['section'], $entity_id);
+    }
+
+    // Process all region modifiers if available.
+    if (!empty($blocks['region'])) {
+      foreach ($blocks['region'] as $region_key => $entities) {
+        $entity_id = 'section-' . $section_id . '-region-' . $region_key;
+        _modifiers_layout_apply($variables, $entities, $entity_id, $region_key);
+      }
+    }
+  }
+}
+
+/**
+ * Apply modifications extracted from Layout Builder blocks.
+ *
+ * @param array $build
+ *   The build array for rendering.
+ * @param array|\Drupal\block_content\Entity\BlockContent[] $entities
+ *   The set of modifier blocks.
+ * @param string $entity_id
+ *   The block entity ID.
+ * @param string|null $region
+ *   The region name or NULL for section.
+ */
+function _modifiers_layout_apply(array &$build, $entities, $entity_id, $region = NULL) {
+
+  // Initialize modifiers service.
+  /** @var \Drupal\modifiers\Modifiers $modifiers */
+  $modifiers = \Drupal::service('modifiers');
+
+  // Compose selector and config to field mapping.
+  $selector = 'html body .modifiers.modifiers-id-' . $entity_id;
+  $config = [];
+
+  // Process all entities.
+  foreach ($entities as $entity) {
+    $entity_config = [];
+
+    // Process all fields attached to entity.
+    foreach ($entity->getFields() as $field) {
+      $modifiers->extractFieldConfig($field, $entity_config);
+    }
+    // Fill entity values into config array.
+    $config[$entity->bundle()][] = $entity_config;
+  }
+
+  $modifications = [];
+  // Fill all modifications.
+  $modifiers->process($modifications, $config, $selector);
+
+  // Apply modifications if available.
+  if (!empty($modifications)) {
+    if (!empty($region)) {
+      $build['region_attributes'][$region]->addClass([
+        'modifiers',
+        Html::getClass('modifiers-id-' . $entity_id),
+      ]);
+    }
+    else {
+      $build['attributes']['class'][] = 'modifiers';
+      $build['attributes']['class'][] = Html::getClass('modifiers-id-' . $entity_id);
+    }
     $modifiers->apply($modifications, $build, $entity_id);
   }
 }

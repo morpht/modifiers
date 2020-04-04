@@ -247,36 +247,45 @@ class Modifiers {
       // Only if entity bundle is not already processed.
       if (!in_array($referenced_entity_bundle, $processed_bundles)) {
         $referenced_entity_config = [];
-        $referenced_entity_fields = $referenced_entity->getFields();
 
         // Process all fields attached to referenced entity.
-        foreach ($referenced_entity_fields as $referenced_entity_field_name => $referenced_entity_field) {
-          /** @var \Drupal\Core\Field\FieldStorageDefinitionInterface $referenced_entity_field_storage */
-          $referenced_entity_field_storage = $referenced_entity_field->getFieldDefinition()
-            ->getFieldStorageDefinition();
-
-          // Skip entity base fields.
-          if (!$referenced_entity_field_storage->isBaseField()) {
-
-            // Get simple value from field with referenced entity.
-            if ($referenced_entity_field instanceof EntityReferenceFieldItemListInterface) {
-              $value = $this->getReferencedValue($referenced_entity_field, $referenced_entity_field_storage);
-            }
-            else {
-              // Otherwise get value from simple field.
-              $value = $this->getSimpleValue($referenced_entity_field, $referenced_entity_field_storage);
-            }
-
-            // Fill field value into referenced entity config array.
-            $referenced_entity_field_short = $this->getShortField($referenced_entity_field_name);
-            $referenced_entity_config[$referenced_entity_field_short] = $value;
-          }
+        foreach ($referenced_entity->getFields() as $referenced_entity_field) {
+          $this->extractFieldConfig($referenced_entity_field, $referenced_entity_config);
         }
         // Fill referenced entity values into config array.
         $config[$field_short][$referenced_entity_bundle][] = $referenced_entity_config;
       }
     }
     return $config;
+  }
+
+  /**
+   * Extracts configuration from provided entity field.
+   *
+   * @param \Drupal\Core\Field\FieldItemListInterface $field
+   *   The field object containing values.
+   * @param array $config
+   *   The array where configuration is added.
+   */
+  public function extractFieldConfig(FieldItemListInterface $field, array &$config) {
+
+    // Skip entity base fields.
+    $field_storage = $field->getFieldDefinition()->getFieldStorageDefinition();
+    if (!$field_storage->isBaseField()) {
+
+      // Get simple value from field with referenced entity.
+      if ($field instanceof EntityReferenceFieldItemListInterface) {
+        $value = $this->getReferencedValue($field, $field_storage);
+      }
+      else {
+        // Otherwise get value from simple field.
+        $value = $this->getSimpleValue($field, $field_storage);
+      }
+
+      // Fill field value into referenced entity config array.
+      $field_short = $this->getShortField($field->getName());
+      $config[$field_short] = $value;
+    }
   }
 
   /**
