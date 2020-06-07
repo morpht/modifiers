@@ -7,14 +7,39 @@ namespace Drupal\modifiers;
  */
 class Modification implements ModificationInterface {
 
+  /**
+   * The modification styles.
+   *
+   * @var array
+   */
   private $css;
 
+  /**
+   * The modification libraries.
+   *
+   * @var array
+   */
   private $libraries;
 
+  /**
+   * The modification settings.
+   *
+   * @var array
+   */
   private $settings;
 
+  /**
+   * The modification attributes.
+   *
+   * @var array
+   */
   private $attributes;
 
+  /**
+   * The modification links.
+   *
+   * @var array
+   */
   private $links;
 
   /**
